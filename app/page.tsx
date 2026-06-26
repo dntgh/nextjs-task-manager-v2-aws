@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import TaskForm from "@/components/TaskForm";
+import TaskList from "@/components/TaskList";
 
 interface Task {
   id: string;
@@ -33,6 +34,13 @@ export default function Home() {
     setTasks(tasks.filter((task) => task.id !== id));
   };
 
+  const handleToggle = (id: string) => {
+    const task = tasks.find((t) => t.id === id);
+    if (task) {
+      updateTask(id, { completed: !task.completed });
+    }
+  };
+
   return (
     <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black min-h-screen">
       <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-center py-32 px-16 bg-white dark:bg-black">
@@ -47,46 +55,11 @@ export default function Home() {
             <TaskForm onAddTask={addTask} />
           </div>
           <div className="w-full max-w-xl mt-8">
-            {tasks.length === 0 ? (
-              <p className="text-center text-zinc-500 dark:text-zinc-400">
-                No tasks yet. Add one above!
-              </p>
-            ) : (
-              <ul className="flex flex-col gap-3">
-                {tasks.map((task) => (
-                  <li
-                    key={task.id}
-                    className="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800"
-                  >
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        checked={task.completed}
-                        onChange={(e) =>
-                          updateTask(task.id, { completed: e.target.checked })
-                        }
-                        className="w-5 h-5 rounded border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-blue-600 focus:ring-blue-500"
-                      />
-                      <span
-                        className={`text-lg ${
-                          task.completed
-                            ? "line-through text-zinc-500 dark:text-zinc-500"
-                            : "text-black dark:text-zinc-50"
-                        }`}
-                      >
-                        {task.title}
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => deleteTask(task.id)}
-                      className="px-3 py-1 text-sm text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
-                    >
-                      Delete
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <TaskList
+              tasks={tasks}
+              onToggle={handleToggle}
+              onDelete={deleteTask}
+            />
           </div>
         </div>
       </main>
