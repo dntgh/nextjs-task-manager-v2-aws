@@ -3,6 +3,7 @@
 import { useState } from "react";
 import TaskForm from "@/components/TaskForm";
 import TaskList from "@/components/TaskList";
+import useLocalStorage from "@/hooks/useLocalStorage";
 
 interface Task {
   id: string;
@@ -15,7 +16,7 @@ interface Task {
 type FilterType = 'all' | 'active' | 'completed';
 
 export default function Home() {
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasks, setTasks] = useLocalStorage<Task[]>('tasks', []);
   const [filter, setFilter] = useState<FilterType>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const completedTasks = tasks.filter((task) => task.completed).length;
