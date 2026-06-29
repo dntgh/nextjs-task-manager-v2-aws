@@ -8,6 +8,8 @@ interface Task {
   id: string;
   title: string;
   completed: boolean;
+  priority: 'high' | 'medium' | 'low';
+  dueDate?: string;
 }
 
 type FilterType = 'all' | 'active' | 'completed';
@@ -25,11 +27,13 @@ export default function Home() {
     return true;
   });
 
-  const addTask = (title: string) => {
+  const addTask = (title: string, priority: 'high' | 'medium' | 'low' = 'medium', dueDate?: string) => {
     const newTask: Task = {
       id: crypto.randomUUID(),
       title,
       completed: false,
+      priority,
+      dueDate,
     };
     setTasks([...tasks, newTask]);
   };
@@ -53,8 +57,8 @@ export default function Home() {
     }
   };
 
-  const handleUpdate = (id: string, title: string) => {
-    updateTask(id, { title });
+  const handleUpdate = (id: string, title: string, priority?: 'high' | 'medium' | 'low', dueDate?: string) => {
+    updateTask(id, { title, ...(priority && { priority }), ...(dueDate !== undefined && { dueDate }) });
   };
 
   return (

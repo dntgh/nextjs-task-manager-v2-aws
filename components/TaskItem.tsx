@@ -6,13 +6,15 @@ interface Task {
   id: string;
   title: string;
   completed: boolean;
+  priority: 'high' | 'medium' | 'low';
+  dueDate?: string;
 }
 
 interface TaskItemProps {
   task: Task;
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
-  onUpdate: (id: string, title: string) => void;
+  onUpdate: (id: string, title: string, priority?: 'high' | 'medium' | 'low', dueDate?: string) => void;
 }
 
 export default function TaskItem({
@@ -23,17 +25,21 @@ export default function TaskItem({
 }: TaskItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(task.title);
+  const [editPriority, setEditPriority] = useState<'high' | 'medium' | 'low'>(task.priority);
+  const [editDueDate, setEditDueDate] = useState(task.dueDate || '');
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const handleSave = () => {
     if (editTitle.trim() !== "") {
-      onUpdate(task.id, editTitle.trim());
+      onUpdate(task.id, editTitle.trim(), editPriority, editDueDate || undefined);
       setIsEditing(false);
     }
   };
 
   const handleCancel = () => {
     setEditTitle(task.title);
+    setEditPriority(task.priority);
+    setEditDueDate(task.dueDate || '');
     setIsEditing(false);
   };
 
@@ -48,6 +54,53 @@ export default function TaskItem({
   const handleDelete = () => {
     onDelete(task.id);
     setIsDeleteModalOpen(false);
+  };
+
+  const getPriorityBadge = () => {
+    const badges = {
+      high: 'bg-red-50 text-red-700',
+      medium: 'bg-yellow-50 text-yellow-700',
+      low: 'bg-green-50 text-green-700',
+    };
+    const labels = {
+      high: 'High',
+      medium: 'Medium',
+      low: 'Low',
+    };
+    return (
+      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${badges[task.priority]}`}>
+        {labels[task.priority]}
+      </span>
+    );
+  };
+
+  const formatDueDate = () => {
+    if (!task.dueDate) return '';
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dueDate = new Date(task.dueDate);
+    dueDate.setHours(0, 0, 0, 0);
+
+    const diffTime = dueDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Tomorrow';
+    if (diffDays === -1) return 'Yesterday';
+    if (diffDays < -1) return `${Math.abs(diffDays)} days ago`;
+    if (diffDays > 1) return `In ${diffDays} days`;
+
+    return task.dueDate;
+  };
+
+  const isOverdue = () => {
+    if (!task.dueDate || task.completed) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dueDate = new Date(task.dueDate);
+    dueDate.setHours(0, 0, 0, 0);
+    return dueDate < today;
   };
 
   return (
@@ -76,7 +129,7 @@ export default function TaskItem({
         </button>
 
         {isEditing ? (
-          <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center">
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
             <input
               type="text"
               value={editTitle}
@@ -85,6 +138,23 @@ export default function TaskItem({
               className="min-h-10 min-w-0 flex-1 rounded-lg border border-zinc-200 bg-white px-3 text-zinc-950 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
               autoFocus
             />
+            <div className="flex gap-2">
+              <select
+                value={editPriority}
+                onChange={(e) => setEditPriority(e.target.value as 'high' | 'medium' | 'low')}
+                className="min-h-10 flex-1 rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-950 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
+              >
+                <option value="high">High Priority</option>
+                <option value="medium">Medium Priority</option>
+                <option value="low">Low Priority</option>
+              </select>
+              <input
+                type="date"
+                value={editDueDate}
+                onChange={(e) => setEditDueDate(e.target.value)}
+                className="min-h-10 flex-1 rounded-lg border border-zinc-200 bg-white px-3 text-sm text-zinc-950 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
+              />
+            </div>
             <div className="flex gap-2">
               <button
                 onClick={handleSave}
@@ -101,15 +171,25 @@ export default function TaskItem({
             </div>
           </div>
         ) : (
-          <span
-            className={`min-w-0 flex-1 truncate text-left text-base font-medium transition ${
-              task.completed
-                ? "text-zinc-400 line-through decoration-zinc-300"
-                : "text-zinc-900"
-            }`}
-          >
-            {task.title}
-          </span>
+          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+            <div className="flex items-center gap-2">
+              <span
+                className={`min-w-0 flex-1 truncate text-left text-base font-medium transition ${
+                  task.completed
+                    ? "text-zinc-400 line-through decoration-zinc-300"
+                    : "text-zinc-900"
+                }`}
+              >
+                {task.title}
+              </span>
+              {getPriorityBadge()}
+            </div>
+            {formatDueDate() && (
+              <span className={`text-xs font-medium ${isOverdue() ? 'text-red-600' : 'text-zinc-500'}`}>
+                {formatDueDate()}
+              </span>
+            )}
+          </div>
         )}
       </div>
 

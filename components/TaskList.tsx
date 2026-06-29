@@ -6,13 +6,15 @@ interface Task {
   id: string;
   title: string;
   completed: boolean;
+  priority: 'high' | 'medium' | 'low';
+  dueDate?: string;
 }
 
 interface TaskListProps {
   tasks: Task[];
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
-  onUpdate: (id: string, title: string) => void;
+  onUpdate: (id: string, title: string, priority?: 'high' | 'medium' | 'low', dueDate?: string) => void;
 }
 
 export default function TaskList({ tasks, onToggle, onDelete, onUpdate }: TaskListProps) {
