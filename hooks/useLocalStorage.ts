@@ -1,22 +1,21 @@
 import { useState, useEffect } from 'react';
 
 function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T) => void] {
-  // 1. Initialize state with initialValue to keep server and client initial HTML synchronized
-  const [storedValue, setStoredValue] = useState<T>(initialValue);
-
-  // 2. This useEffect runs ONLY once on the client side after the component has mounted
-  useEffect(() => {
+  // 1. Read from localStorage directly during state initialization (Safe for Client)
+  const [storedValue, setStoredValue] = useState<T>(() => {
+    if (typeof window === 'undefined') {
+      return initialValue;
+    }
     try {
       const item = window.localStorage.getItem(key);
-      if (item) {
-        setStoredValue(JSON.parse(item));
-      }
+      return item ? JSON.parse(item) : initialValue;
     } catch (error) {
       console.error(`Error parsing localStorage key "${key}":`, error);
+      return initialValue;
     }
-  }, [key]); // Only run on component mount
+  });
 
-  // 3. This useEffect synchronizes the state back to localStorage whenever it changes
+  // 2. Synchronize state changes to localStorage
   useEffect(() => {
     try {
       window.localStorage.setItem(key, JSON.stringify(storedValue));
