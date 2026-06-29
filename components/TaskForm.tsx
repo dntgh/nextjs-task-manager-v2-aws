@@ -31,13 +31,13 @@ export default function TaskForm({ onAddTask }: TaskFormProps) {
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         placeholder="Add a focused task..."
-        className="min-h-12 rounded-xl border border-zinc-200 bg-white px-4 text-base text-zinc-950 shadow-sm shadow-zinc-100 outline-none transition placeholder:text-zinc-400 focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
+        className="min-h-12 rounded-xl border border-zinc-200 bg-white px-4 text-base text-zinc-950 shadow-sm shadow-zinc-100 outline-none transition placeholder:text-zinc-400 focus:border-blue-300 focus:ring-4 focus:ring-blue-100 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:shadow-zinc-950/40 dark:placeholder:text-zinc-500 dark:focus:border-blue-400 dark:focus:ring-blue-500/20"
       />
       <div className="flex gap-3">
         <select
           value={priority}
           onChange={(e) => setPriority(e.target.value as 'high' | 'medium' | 'low')}
-          className="min-h-12 flex-1 rounded-xl border border-zinc-200 bg-white px-4 text-base text-zinc-950 shadow-sm shadow-zinc-100 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
+          className="min-h-12 flex-1 rounded-xl border border-zinc-200 bg-white px-4 text-base text-zinc-950 shadow-sm shadow-zinc-100 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:shadow-zinc-950/40 dark:focus:border-blue-400 dark:focus:ring-blue-500/20"
         >
           <option value="high">High Priority</option>
           <option value="medium">Medium Priority</option>
@@ -47,12 +47,12 @@ export default function TaskForm({ onAddTask }: TaskFormProps) {
           type="date"
           value={dueDate}
           onChange={(e) => setDueDate(e.target.value)}
-          className="min-h-12 flex-1 rounded-xl border border-zinc-200 bg-white px-4 text-base text-zinc-950 shadow-sm shadow-zinc-100 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
+          className="min-h-12 flex-1 rounded-xl border border-zinc-200 bg-white px-4 text-base text-zinc-950 shadow-sm shadow-zinc-100 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:shadow-zinc-950/40 dark:focus:border-blue-400 dark:focus:ring-blue-500/20"
         />
       </div>
       <button
         type="submit"
-        className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 font-semibold text-white shadow-md shadow-blue-600/20 transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-100"
+        className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 font-semibold text-white shadow-md shadow-blue-600/20 transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-100 dark:bg-blue-500 dark:shadow-blue-950/40 dark:hover:bg-blue-400 dark:focus:ring-blue-500/25"
       >
         <svg
           aria-hidden="true"

@@ -1,22 +1,31 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T) => void] {
-  // 1. Read from localStorage directly during state initialization (Safe for Client)
-  const [storedValue, setStoredValue] = useState<T>(() => {
-    if (typeof window === 'undefined') {
-      return initialValue;
-    }
-    try {
-      const item = window.localStorage.getItem(key);
-      return item ? JSON.parse(item) : initialValue;
-    } catch (error) {
-      console.error(`Error parsing localStorage key "${key}":`, error);
-      return initialValue;
-    }
-  });
+  const hasLoadedRef = useRef(false);
+  const initialValueRef = useRef(initialValue);
+  const [storedValue, setStoredValue] = useState<T>(initialValue);
 
-  // 2. Synchronize state changes to localStorage
   useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      try {
+        const item = window.localStorage.getItem(key);
+        setStoredValue(item ? JSON.parse(item) : initialValueRef.current);
+      } catch (error) {
+        console.error(`Error parsing localStorage key "${key}":`, error);
+        setStoredValue(initialValueRef.current);
+      } finally {
+        hasLoadedRef.current = true;
+      }
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [key]);
+
+  useEffect(() => {
+    if (!hasLoadedRef.current) {
+      return;
+    }
+
     try {
       window.localStorage.setItem(key, JSON.stringify(storedValue));
     } catch (error) {
@@ -25,6 +34,7 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T) => voi
   }, [key, storedValue]);
 
   const setValue = (value: T) => {
+    hasLoadedRef.current = true;
     setStoredValue(value);
   };
 

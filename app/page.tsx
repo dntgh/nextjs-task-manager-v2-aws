@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import TaskForm from "@/components/TaskForm";
 import TaskList from "@/components/TaskList";
+import ThemeToggle from "@/components/ThemeToggle";
 import useLocalStorage from "@/hooks/useLocalStorage";
 
 interface Task {
@@ -16,6 +17,7 @@ interface Task {
 type FilterType = 'all' | 'active' | 'completed';
 
 export default function Home() {
+  const [isMounted, setIsMounted] = useState(false);
   const [tasks, setTasks] = useLocalStorage<Task[]>('tasks', []);
   const [filter, setFilter] = useState<FilterType>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -72,20 +74,33 @@ export default function Home() {
     updateTask(id, { title, ...(priority && { priority }), ...(dueDate !== undefined && { dueDate }) });
   };
 
+  useEffect(() => {
+    const frameId = requestAnimationFrame(() => {
+      setIsMounted(true);
+    });
+
+    return () => cancelAnimationFrame(frameId);
+  }, []);
+
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50/50 to-zinc-100 px-4 py-10 font-sans text-zinc-950">
-      <main className="w-full max-w-3xl rounded-3xl border border-white/80 bg-white px-5 py-8 shadow-xl shadow-zinc-200/70 sm:px-8 md:px-12">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50/50 to-zinc-100 px-4 py-10 font-sans text-zinc-950 transition-colors dark:from-zinc-950 dark:via-slate-950 dark:to-blue-950 dark:text-zinc-50">
+      <main className="w-full max-w-3xl rounded-3xl border border-white/80 bg-white px-5 py-8 shadow-xl shadow-zinc-200/70 transition-colors dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-zinc-950/60 sm:px-8 md:px-12">
         <div className="flex w-full flex-col gap-8">
-          <div className="space-y-3 text-center">
-            <p className="text-sm font-medium uppercase tracking-[0.18em] text-blue-600">
-              Productivity dashboard
-            </p>
-            <h1 className="text-4xl font-semibold leading-tight tracking-tight text-zinc-950">
-            Task Manager
-            </h1>
-            <p className="mx-auto max-w-md text-base leading-7 text-zinc-500">
-              Organize, refine, and complete your priorities with a focused task list.
-            </p>
+          <div className="relative space-y-3 text-center">
+            <div className="absolute right-0 top-0">
+              <ThemeToggle isMounted={isMounted} />
+            </div>
+            <div className="px-14">
+              <p className="text-sm font-medium uppercase tracking-[0.18em] text-blue-600 dark:text-blue-300">
+                Productivity dashboard
+              </p>
+              <h1 className="mt-3 text-4xl font-semibold leading-tight tracking-tight text-zinc-950 dark:text-white">
+                Task Manager
+              </h1>
+              <p className="mx-auto mt-3 max-w-md text-base leading-7 text-zinc-500 dark:text-zinc-400">
+                Organize, refine, and complete your priorities with a focused task list.
+              </p>
+            </div>
           </div>
 
           <div className="w-full">
@@ -109,13 +124,13 @@ export default function Home() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search tasks..."
-                className="w-full rounded-xl border border-zinc-200 bg-white py-3 pl-12 pr-12 text-base text-zinc-950 shadow-sm shadow-zinc-100 outline-none transition placeholder:text-zinc-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                className="w-full rounded-xl border border-zinc-200 bg-white py-3 pl-12 pr-12 text-base text-zinc-950 shadow-sm shadow-zinc-100 outline-none transition placeholder:text-zinc-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:shadow-zinc-950/40 dark:placeholder:text-zinc-500 dark:focus:border-blue-400 dark:focus:ring-blue-500/20"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 transition hover:text-zinc-600 focus:outline-none"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 transition hover:text-zinc-600 focus:outline-none dark:text-zinc-500 dark:hover:text-zinc-300"
                   aria-label="Clear search"
                 >
                   <svg
@@ -134,13 +149,13 @@ export default function Home() {
           </div>
 
           <div className="w-full">
-            <div className="flex gap-2 rounded-xl border border-zinc-200 bg-zinc-50/50 p-1">
+            <div className="flex gap-2 rounded-xl border border-zinc-200 bg-zinc-50/50 p-1 dark:border-zinc-700 dark:bg-zinc-950/70">
               <button
                 onClick={() => setFilter('all')}
                 className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                   filter === 'all'
-                    ? 'bg-white text-blue-600 shadow-sm'
-                    : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900'
+                    ? 'bg-white text-blue-600 shadow-sm dark:bg-zinc-800 dark:text-blue-300'
+                    : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100'
                 }`}
               >
                 All
@@ -149,8 +164,8 @@ export default function Home() {
                 onClick={() => setFilter('active')}
                 className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                   filter === 'active'
-                    ? 'bg-white text-blue-600 shadow-sm'
-                    : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900'
+                    ? 'bg-white text-blue-600 shadow-sm dark:bg-zinc-800 dark:text-blue-300'
+                    : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100'
                 }`}
               >
                 Active
@@ -159,8 +174,8 @@ export default function Home() {
                 onClick={() => setFilter('completed')}
                 className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                   filter === 'completed'
-                    ? 'bg-white text-blue-600 shadow-sm'
-                    : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900'
+                    ? 'bg-white text-blue-600 shadow-sm dark:bg-zinc-800 dark:text-blue-300'
+                    : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100'
                 }`}
               >
                 Completed
@@ -168,21 +183,21 @@ export default function Home() {
             </div>
           </div>
 
-          <section className="flex flex-col gap-4 rounded-2xl border border-zinc-100 bg-zinc-50/80 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <section className="flex flex-col gap-4 rounded-2xl border border-zinc-100 bg-zinc-50/80 p-4 dark:border-zinc-800 dark:bg-zinc-950/70 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
-              <p className="text-sm font-medium text-zinc-500">Progress</p>
-              <p className="text-lg font-semibold text-zinc-900">
-                {completedTasks} of {tasks.length} completed
+              <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Progress</p>
+              <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+                {isMounted ? `${completedTasks} of ${tasks.length} completed` : "Loading..."}
               </p>
             </div>
             <div className="flex w-full items-center gap-3 sm:max-w-xs">
-              <div className="h-3 flex-1 overflow-hidden rounded-full bg-zinc-200">
+              <div className="h-3 flex-1 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800">
                 <div
-                  className="h-full rounded-full bg-blue-600 transition-all duration-300 ease-out"
+                  className="h-full rounded-full bg-blue-600 transition-all duration-300 ease-out dark:bg-blue-400"
                   style={{ width: `${progressValue}%` }}
                 />
               </div>
-              <span className="w-10 text-right text-sm font-semibold text-zinc-500">
+              <span className="w-10 text-right text-sm font-semibold text-zinc-500 dark:text-zinc-400">
                 {progressValue}%
               </span>
             </div>
