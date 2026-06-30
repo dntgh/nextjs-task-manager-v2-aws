@@ -20,7 +20,7 @@ type FilterType = 'all' | 'active' | 'completed';
 
 export default function Home() {
   const [isMounted, setIsMounted] = useState(false);
-  const [tasks, setTasks] = useLocalStorage<Task[]>('tasks', []);
+  const [tasks, setTasks, isLoaded] = useLocalStorage<Task[]>('tasks', []);
   const [filter, setFilter] = useState<FilterType>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
@@ -236,6 +236,7 @@ export default function Home() {
               onToggle={handleToggle}
               onDelete={deleteTask}
               onUpdate={handleUpdate}
+              isLoaded={isLoaded}
             />
           </div>
         </div>

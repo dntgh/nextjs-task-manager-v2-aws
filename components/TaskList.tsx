@@ -15,9 +15,23 @@ interface TaskListProps {
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
   onUpdate: (id: string, title: string, priority?: 'high' | 'medium' | 'low', dueDate?: string) => void;
+  isLoaded?: boolean;
 }
 
-export default function TaskList({ tasks, onToggle, onDelete, onUpdate }: TaskListProps) {
+export default function TaskList({ tasks, onToggle, onDelete, onUpdate, isLoaded = false }: TaskListProps) {
+  if (!isLoaded) {
+    return (
+      <div className="flex flex-col gap-3 animate-pulse">
+        {[1, 2, 3].map((i) => (
+          <div
+            key={i}
+            className="h-[72px] w-full rounded-xl bg-zinc-100/80 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800"
+          />
+        ))}
+      </div>
+    );
+  }
+
   if (tasks.length === 0) {
     return (
       <div className="animate-fade-up flex flex-col items-center justify-center rounded-2xl border border-dashed border-zinc-200 bg-zinc-50/70 px-6 py-14 text-center dark:border-zinc-700 dark:bg-zinc-950/50">

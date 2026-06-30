@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 
-function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((val: T) => T)) => void] {
+function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((val: T) => T)) => void, boolean] {
   const hasLoadedRef = useRef(false);
   const initialValueRef = useRef(initialValue);
   const [storedValue, setStoredValue] = useState<T>(initialValue);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -15,6 +16,7 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((val
         setStoredValue(initialValueRef.current);
       } finally {
         hasLoadedRef.current = true;
+        setIsLoaded(true);
       }
     }, 0);
 
@@ -38,7 +40,7 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((val
     setStoredValue((prev) => (typeof value === "function" ? (value as Function)(prev) : value));
   };
 
-  return [storedValue, setValue];
+  return [storedValue, setValue, isLoaded];
 }
 
 export default useLocalStorage;
