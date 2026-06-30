@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { toast } from "sonner";
 import TaskForm from "@/components/TaskForm";
 import TaskList from "@/components/TaskList";
@@ -28,20 +28,22 @@ export default function Home() {
   const progressValue =
     tasks.length === 0 ? 0 : Math.round((completedTasks / tasks.length) * 100);
 
-  const filteredTasks = tasks.filter((task) => {
-    const matchesFilter = () => {
-      if (filter === 'active') return !task.completed;
-      if (filter === 'completed') return task.completed;
-      return true;
-    };
+  const filteredTasks = useMemo(() => {
+    return tasks.filter((task) => {
+      const matchesFilter = () => {
+        if (filter === 'active') return !task.completed;
+        if (filter === 'completed') return task.completed;
+        return true;
+      };
 
-    const matchesSearch = () => {
-      if (!debouncedSearchQuery.trim()) return true;
-      return task.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase());
-    };
+      const matchesSearch = () => {
+        if (!debouncedSearchQuery.trim()) return true;
+        return task.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase());
+      };
 
-    return matchesFilter() && matchesSearch();
-  });
+      return matchesFilter() && matchesSearch();
+    });
+  }, [tasks, filter, debouncedSearchQuery]);
 
   const addTask = (title: string, priority: 'high' | 'medium' | 'low' = 'medium', dueDate?: string) => {
     const newTask: Task = {

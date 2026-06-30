@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 
 interface Task {
@@ -29,6 +29,30 @@ export default function TaskItem({
   const [editPriority, setEditPriority] = useState<'high' | 'medium' | 'low'>(task.priority);
   const [editDueDate, setEditDueDate] = useState(task.dueDate || '');
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const cancelButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Focus the Cancel button automatically when the delete modal opens to prevent keyboard traps
+  useEffect(() => {
+    if (isDeleteModalOpen) {
+      cancelButtonRef.current?.focus();
+    }
+  }, [isDeleteModalOpen]);
+
+  // Handle Escape key to close the delete modal
+  useEffect(() => {
+    if (!isDeleteModalOpen) return;
+
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsDeleteModalOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleGlobalKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleGlobalKeyDown);
+    };
+  }, [isDeleteModalOpen]);
 
   const handleSave = () => {
     if (editTitle.trim() !== "") {
@@ -112,6 +136,8 @@ export default function TaskItem({
         <button
           type="button"
           onClick={() => onToggle(task.id)}
+          role="checkbox"
+          aria-checked={task.completed}
           aria-label={task.completed ? "Mark task as incomplete" : "Mark task as complete"}
           className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 dark:focus:ring-blue-400 dark:focus:ring-offset-zinc-950 ${
             task.completed
@@ -282,6 +308,7 @@ export default function TaskItem({
             <div className="mt-6 grid grid-cols-2 gap-3">
               <button
                 type="button"
+                ref={cancelButtonRef}
                 onClick={() => setIsDeleteModalOpen(false)}
                 className="rounded-xl bg-zinc-100 px-4 py-3 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-200 focus:outline-none focus:ring-2 focus:ring-zinc-400 focus:ring-offset-1 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700 dark:focus:ring-zinc-500 dark:focus:ring-offset-zinc-900"
               >
