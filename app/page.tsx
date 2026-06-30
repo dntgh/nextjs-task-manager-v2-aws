@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import TaskForm from "@/components/TaskForm";
 import TaskList from "@/components/TaskList";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -49,6 +50,7 @@ export default function Home() {
       dueDate,
     };
     setTasks([...tasks, newTask]);
+    toast.success(`Task "${title}" added successfully!`);
   };
 
   const updateTask = (id: string, updatedFields: Partial<Task>) => {
@@ -60,18 +62,36 @@ export default function Home() {
   };
 
   const deleteTask = (id: string) => {
-    setTasks(tasks.filter((task) => task.id !== id));
+    const taskToDelete = tasks.find((task) => task.id === id);
+    const remainingTasks = tasks.filter((task) => task.id !== id);
+    setTasks(remainingTasks);
+    toast.success('Task deleted successfully!', {
+      action: {
+        label: 'Undo',
+        onClick: () => {
+          if (taskToDelete) {
+            const index = tasks.findIndex((t) => t.id === id);
+            const restored = [...remainingTasks];
+            restored.splice(index, 0, taskToDelete);
+            setTasks(restored);
+          }
+        },
+      },
+    });
   };
 
   const handleToggle = (id: string) => {
     const task = tasks.find((t) => t.id === id);
     if (task) {
-      updateTask(id, { completed: !task.completed });
+      const willBeCompleted = !task.completed;
+      updateTask(id, { completed: willBeCompleted });
+      toast.info(`Task marked as ${willBeCompleted ? 'completed' : 'active'}.`);
     }
   };
 
   const handleUpdate = (id: string, title: string, priority?: 'high' | 'medium' | 'low', dueDate?: string) => {
     updateTask(id, { title, ...(priority && { priority }), ...(dueDate !== undefined && { dueDate }) });
+    toast.success('Task updated successfully!');
   };
 
   useEffect(() => {
