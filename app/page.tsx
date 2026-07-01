@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
 import TaskForm from "@/components/TaskForm";
 import TaskList from "@/components/TaskList";
@@ -116,7 +117,28 @@ export default function Home() {
       <main className="w-full max-w-3xl rounded-3xl border border-white/80 bg-white px-5 py-8 shadow-xl shadow-zinc-200/70 transition-colors dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-zinc-950/60 sm:px-8 md:px-12">
         <div className="flex w-full flex-col gap-8">
           <div className="relative space-y-3 text-center">
-            <div className="absolute right-0 top-0">
+            <div className="absolute right-0 top-0 flex items-center gap-2">
+              <Link
+                href="/about"
+                className="inline-flex h-11 items-center gap-1.5 rounded-full border border-zinc-200 bg-white px-3 text-sm font-medium text-zinc-600 shadow-sm shadow-zinc-200/70 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:shadow-zinc-950/30 dark:hover:border-blue-500/40 dark:hover:bg-blue-500/10 dark:hover:text-blue-300 dark:focus:ring-blue-500/20 sm:px-4"
+                title="About Project Specifications"
+              >
+                <svg
+                  aria-hidden="true"
+                  className="h-5 w-5 shrink-0 text-zinc-500 dark:text-zinc-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="m11.25 11.25.041-.02a.75.75 0 1 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.852l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"
+                  />
+                </svg>
+                <span className="hidden sm:inline">About</span>
+              </Link>
               <ThemeToggle isMounted={isMounted} />
             </div>
             <div className="px-14">
