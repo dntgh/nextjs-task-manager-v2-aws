@@ -37,7 +37,7 @@ export default function CurrentArchitecture() {
         </div>
 
         <p className="text-base leading-relaxed text-zinc-600 dark:text-zinc-400">
-          The architecture operates entirely client-side. User actions (creating, searching, and filtering tasks) update the local React state—utilizing a debounce mechanism for search inputs—before automatically synchronizing with browser LocalStorage for persistence.
+          The application follows a Local-First SPA (Single Page Application) architecture operating entirely client-side. User actions (creating, searching, and filtering tasks) update the local React state—utilizing a debounce mechanism for search inputs—before automatically synchronizing with browser LocalStorage for persistence.
         </p>
 
         {/* Visual Flowchart Diagram */}
