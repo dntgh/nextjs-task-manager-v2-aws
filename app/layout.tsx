@@ -1,9 +1,10 @@
 // Initialize AWS Amplify configuration at the application entry point
-import '@/lib/aws-config';import type { Metadata } from "next";
+import '@/lib/aws-config';
+import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
+import { AuthProvider } from "@/hooks/useAuth";
 import "./globals.css";
-
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -50,13 +51,15 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className="min-h-full flex flex-col">
-        {children}
-        <Toaster
-          position="top-right"
-          richColors
-          closeButton
-          theme="system"
-        />
+        <AuthProvider>
+          {children}
+          <Toaster
+            position="top-right"
+            richColors
+            closeButton
+            theme="system"
+          />
+        </AuthProvider>
       </body>
     </html>
   );
