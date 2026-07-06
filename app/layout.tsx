@@ -1,4 +1,5 @@
-import type { Metadata } from "next";
+// Initialize AWS Amplify configuration at the application entry point
+import '@/lib/aws-config';import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.css";
