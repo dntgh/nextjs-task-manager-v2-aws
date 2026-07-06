@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getCurrentUser, fetchAuthSession, signOut, AuthUser } from 'aws-amplify/auth';
+import { getCurrentUser, fetchAuthSession, signIn, signOut, AuthUser, SignInInput } from 'aws-amplify/auth';
 import { Hub } from 'aws-amplify/utils';
 
 interface AuthContextType {
@@ -9,6 +9,7 @@ interface AuthContextType {
   token: string | null;
   isLoading: boolean;
   logout: () => Promise<void>;
+  handleSignIn: (input: SignInInput) => Promise<any>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -16,6 +17,7 @@ const AuthContext = createContext<AuthContextType>({
   token: null,
   isLoading: true,
   logout: async () => {},
+  handleSignIn: async () => {},
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -46,6 +48,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const handleSignIn = async (input: SignInInput) => {
+    setIsLoading(true);
+    try {
+      const response = await signIn(input);
+      await checkUser();
+      return response;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     checkUser();
 
@@ -72,7 +85,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, logout: handleLogout }}>
+    <AuthContext.Provider value={{ user, token, isLoading, logout: handleLogout, handleSignIn }}>
       {children}
     </AuthContext.Provider>
   );
