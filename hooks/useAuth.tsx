@@ -1,8 +1,9 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getCurrentUser, fetchAuthSession, signIn, signOut, AuthUser, SignInInput } from 'aws-amplify/auth';
+import { getCurrentUser, fetchAuthSession, signIn, signOut, confirmSignIn, AuthUser, SignInInput, ConfirmSignInInput } from 'aws-amplify/auth';
 import { Hub } from 'aws-amplify/utils';
+import '@/lib/aws-config';
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -10,6 +11,7 @@ interface AuthContextType {
   isLoading: boolean;
   logout: () => Promise<void>;
   handleSignIn: (input: SignInInput) => Promise<any>;
+  handleConfirmSignIn: (input: ConfirmSignInInput) => Promise<any>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -18,6 +20,7 @@ const AuthContext = createContext<AuthContextType>({
   isLoading: true,
   logout: async () => {},
   handleSignIn: async () => {},
+  handleConfirmSignIn: async () => {},
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -43,6 +46,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const handleLogout = async () => {
     try {
       await signOut();
+      setUser(null);
+      setToken(null);
+      window.location.href = "/login"; // Force a full navigation and reload for logout
     } catch (error) {
       console.error('Error signing out:', error);
     }
@@ -52,7 +58,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setIsLoading(true);
     try {
       const response = await signIn(input);
-      await checkUser();
+      if (response.nextStep?.signInStep === 'DONE') {
+        await checkUser();
+      }
+      return response;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleConfirmSignIn = async (input: ConfirmSignInInput) => {
+    setIsLoading(true);
+    try {
+      const response = await confirmSignIn(input);
+      if (response.nextStep?.signInStep === 'DONE') {
+        await checkUser();
+      }
       return response;
     } finally {
       setIsLoading(false);
@@ -85,7 +106,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, logout: handleLogout, handleSignIn }}>
+    <AuthContext.Provider value={{ user, token, isLoading, logout: handleLogout, handleSignIn, handleConfirmSignIn }}>
       {children}
     </AuthContext.Provider>
   );
