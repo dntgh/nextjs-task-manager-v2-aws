@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -8,27 +8,31 @@ import { useAuth } from "@/hooks/useAuth";
 import TaskForm from "@/components/TaskForm";
 import TaskList from "@/components/TaskList";
 import ThemeToggle from "@/components/ThemeToggle";
-import useLocalStorage from "@/hooks/useLocalStorage";
 import useDebounce from "@/hooks/useDebounce";
+import {
+  fetchTasks,
+  createTask,
+  updateTask,
+  deleteTask,
+} from "@/services/taskService";
+import type { Task } from "@/types/task";
 
-interface Task {
-  id: string;
-  title: string;
-  completed: boolean;
-  priority: 'high' | 'medium' | 'low';
-  dueDate?: string;
-}
-
-type FilterType = 'all' | 'active' | 'completed';
+type FilterType = "all" | "active" | "completed";
 
 export default function Home() {
   const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
-  const { user, isLoading: authLoading } = useAuth();
-  const [tasks, setTasks, isLoaded] = useLocalStorage<Task[]>('tasks', []);
-  const [filter, setFilter] = useState<FilterType>('all');
-  const [searchQuery, setSearchQuery] = useState('');
+  const { user, token, isLoading: authLoading } = useAuth();
+
+  // ── Task state (now driven by the service layer, not localStorage directly) ─
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasksLoading, setTasksLoading] = useState(true);
+
+  // ── UI state ──────────────────────────────────────────────────────────────
+  const [filter, setFilter] = useState<FilterType>("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
+
   const completedTasks = tasks.filter((task) => task.completed).length;
   const progressValue =
     tasks.length === 0 ? 0 : Math.round((completedTasks / tasks.length) * 100);
@@ -36,98 +40,182 @@ export default function Home() {
   const filteredTasks = useMemo(() => {
     return tasks.filter((task) => {
       const matchesFilter = () => {
-        if (filter === 'active') return !task.completed;
-        if (filter === 'completed') return task.completed;
+        if (filter === "active") return !task.completed;
+        if (filter === "completed") return task.completed;
         return true;
       };
-
       const matchesSearch = () => {
         if (!debouncedSearchQuery.trim()) return true;
-        return task.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase());
+        return task.title
+          .toLowerCase()
+          .includes(debouncedSearchQuery.toLowerCase());
       };
-
       return matchesFilter() && matchesSearch();
     });
   }, [tasks, filter, debouncedSearchQuery]);
 
-  const addTask = (title: string, priority: 'high' | 'medium' | 'low' = 'medium', dueDate?: string) => {
-    const newTask: Task = {
-      id: crypto.randomUUID(),
-      title,
-      completed: false,
-      priority,
-      dueDate,
-    };
-    setTasks([...tasks, newTask]);
-    toast.success(`Task "${title}" added successfully!`);
-  };
-
-  const updateTask = (id: string, updatedFields: Partial<Task>) => {
-    setTasks(
-      tasks.map((task) =>
-        task.id === id ? { ...task, ...updatedFields } : task
-      )
-    );
-  };
-
-  const deleteTask = (id: string) => {
-    const taskToDelete = tasks.find((task) => task.id === id);
-    const index = tasks.findIndex((t) => t.id === id);
-    const remainingTasks = tasks.filter((task) => task.id !== id);
-    setTasks(remainingTasks);
-    toast.success('Task deleted successfully!', {
-      action: {
-        label: 'Undo',
-        onClick: () => {
-          if (taskToDelete) {
-            setTasks((currentTasks) => {
-              if (currentTasks.some((t) => t.id === id)) {
-                return currentTasks;
-              }
-              const restored = [...currentTasks];
-              restored.splice(index, 0, taskToDelete);
-              return restored;
-            });
-          }
-        },
-      },
-    });
-  };
-
-  const handleToggle = (id: string) => {
-    const task = tasks.find((t) => t.id === id);
-    if (task) {
-      const willBeCompleted = !task.completed;
-      updateTask(id, { completed: willBeCompleted });
-      toast.info(`Task marked as ${willBeCompleted ? 'completed' : 'active'}.`);
-    }
-  };
-
-  const handleUpdate = (id: string, title: string, priority?: 'high' | 'medium' | 'low', dueDate?: string) => {
-    updateTask(id, { title, ...(priority && { priority }), ...(dueDate !== undefined && { dueDate }) });
-    toast.success('Task updated successfully!');
-  };
-
+  // ─── Hydration / mount gate ──────────────────────────────────────────────
   useEffect(() => {
-    const frameId = requestAnimationFrame(() => {
-      setIsMounted(true);
-    });
-
+    const frameId = requestAnimationFrame(() => setIsMounted(true));
     return () => cancelAnimationFrame(frameId);
   }, []);
 
+  // ─── Route guard ─────────────────────────────────────────────────────────
   useEffect(() => {
     if (isMounted && !authLoading && !user) {
-      router.push('/login');
+      router.push("/login");
     }
   }, [isMounted, authLoading, user, router]);
 
+  // ─── Initial data load (runs once the user is confirmed authenticated) ───
+  const loadTasks = useCallback(async () => {
+    if (!token) return;
+    setTasksLoading(true);
+    try {
+      const data = await fetchTasks(token);
+      setTasks(data);
+    } catch (err) {
+      console.error("Failed to load tasks:", err);
+      toast.error("Could not load tasks. Please refresh.");
+    } finally {
+      setTasksLoading(false);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    if (isMounted && !authLoading && user && token) {
+      loadTasks();
+    }
+  }, [isMounted, authLoading, user, token, loadTasks]);
+
+  // ─── CRUD handlers ────────────────────────────────────────────────────────
+
+  const handleAddTask = async (
+    title: string,
+    priority: "high" | "medium" | "low" = "medium",
+    dueDate?: string
+  ) => {
+    if (!token) return;
+    try {
+      const newTask = await createTask(token, {
+        title,
+        completed: false,
+        priority,
+        dueDate,
+      });
+      setTasks((prev) => [...prev, newTask]);
+      toast.success(`Task "${title}" added successfully!`);
+    } catch (err) {
+      console.error("Failed to add task:", err);
+      toast.error("Could not add task. Please try again.");
+    }
+  };
+
+  const handleToggle = async (id: string) => {
+    if (!token) return;
+    const task = tasks.find((t) => t.id === id);
+    if (!task) return;
+    const willBeCompleted = !task.completed;
+    // Optimistic update for snappy UI
+    setTasks((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, completed: willBeCompleted } : t))
+    );
+    try {
+      await updateTask(token, id, { completed: willBeCompleted });
+      toast.info(`Task marked as ${willBeCompleted ? "completed" : "active"}.`);
+    } catch (err) {
+      // Revert optimistic update on failure
+      console.error("Failed to toggle task:", err);
+      setTasks((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, completed: task.completed } : t))
+      );
+      toast.error("Could not update task. Please try again.");
+    }
+  };
+
+  const handleUpdate = async (
+    id: string,
+    title: string,
+    priority?: "high" | "medium" | "low",
+    dueDate?: string
+  ) => {
+    if (!token) return;
+    const updates: Partial<Task> = {
+      title,
+      ...(priority && { priority }),
+      ...(dueDate !== undefined && { dueDate }),
+    };
+    // Optimistic update
+    setTasks((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, ...updates } : t))
+    );
+    try {
+      await updateTask(token, id, updates);
+      toast.success("Task updated successfully!");
+    } catch (err) {
+      console.error("Failed to update task:", err);
+      toast.error("Could not update task. Please try again.");
+      // Re-fetch to restore consistent state
+      loadTasks();
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!token) return;
+    // Capture snapshot for undo before removing from state
+    const taskSnapshot = tasks.find((t) => t.id === id);
+    const insertionIndex = tasks.findIndex((t) => t.id === id);
+
+    // Optimistic remove
+    setTasks((prev) => prev.filter((t) => t.id !== id));
+
+    try {
+      await deleteTask(token, id);
+      toast.success("Task deleted successfully!", {
+        action: {
+          label: "Undo",
+          onClick: async () => {
+            if (!taskSnapshot || !token) return;
+            try {
+              // Re-create using the snapshot (id will be reassigned by service/API)
+              const { id: _oldId, ...taskData } = taskSnapshot;
+              const restored = await createTask(token, taskData);
+              setTasks((prev) => {
+                // Insert at the original position for a seamless restore
+                const next = [...prev];
+                next.splice(insertionIndex, 0, restored);
+                return next;
+              });
+              toast.success("Task restored!");
+            } catch {
+              toast.error("Could not restore task.");
+            }
+          },
+        },
+      });
+    } catch (err) {
+      // Revert optimistic remove on failure
+      console.error("Failed to delete task:", err);
+      if (taskSnapshot) {
+        setTasks((prev) => {
+          const next = [...prev];
+          next.splice(insertionIndex, 0, taskSnapshot);
+          return next;
+        });
+      }
+      toast.error("Could not delete task. Please try again.");
+    }
+  };
+
+  // ─── Loading / auth gate render ───────────────────────────────────────────
   if (!isMounted || authLoading || !user) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50/50 to-zinc-100 transition-colors dark:from-zinc-950 dark:via-slate-950 dark:to-blue-950">
         <div className="flex flex-col items-center gap-4">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-600 border-t-transparent dark:border-blue-400 dark:border-t-transparent"></div>
-          <p className="font-medium tracking-tight text-zinc-600 dark:text-zinc-400">Loading...</p>
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-600 border-t-transparent dark:border-blue-400 dark:border-t-transparent" />
+          <p className="font-medium tracking-tight text-zinc-600 dark:text-zinc-400">
+            Loading...
+          </p>
         </div>
       </div>
     );
@@ -170,13 +258,14 @@ export default function Home() {
                 Task Manager
               </h1>
               <p className="mx-auto mt-3 max-w-md text-base leading-7 text-zinc-500 dark:text-zinc-400">
-                Organize, refine, and complete your priorities with a focused task list.
+                Organize, refine, and complete your priorities with a focused
+                task list.
               </p>
             </div>
           </div>
 
           <div className="w-full">
-            <TaskForm onAddTask={addTask} />
+            <TaskForm onAddTask={handleAddTask} />
           </div>
 
           <div className="w-full">
@@ -189,7 +278,11 @@ export default function Home() {
                 stroke="currentColor"
                 strokeWidth="2"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+                />
               </svg>
               <input
                 type="text"
@@ -201,7 +294,7 @@ export default function Home() {
               {searchQuery && (
                 <button
                   type="button"
-                  onClick={() => setSearchQuery('')}
+                  onClick={() => setSearchQuery("")}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 transition hover:text-zinc-600 focus:outline-none dark:text-zinc-500 dark:hover:text-zinc-300"
                   aria-label="Clear search"
                 >
@@ -213,7 +306,11 @@ export default function Home() {
                     stroke="currentColor"
                     strokeWidth="2"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="m6 18 12-12M6 6l12 12" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="m6 18 12-12M6 6l12 12"
+                    />
                   </svg>
                 </button>
               )}
@@ -223,31 +320,31 @@ export default function Home() {
           <div className="w-full">
             <div className="flex gap-2 rounded-xl border border-zinc-200 bg-zinc-50/50 p-1 dark:border-zinc-700 dark:bg-zinc-950/70">
               <button
-                onClick={() => setFilter('all')}
+                onClick={() => setFilter("all")}
                 className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                  filter === 'all'
-                    ? 'bg-white text-blue-600 shadow-sm dark:bg-zinc-800 dark:text-blue-300'
-                    : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100'
+                  filter === "all"
+                    ? "bg-white text-blue-600 shadow-sm dark:bg-zinc-800 dark:text-blue-300"
+                    : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
                 }`}
               >
                 All
               </button>
               <button
-                onClick={() => setFilter('active')}
+                onClick={() => setFilter("active")}
                 className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                  filter === 'active'
-                    ? 'bg-white text-blue-600 shadow-sm dark:bg-zinc-800 dark:text-blue-300'
-                    : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100'
+                  filter === "active"
+                    ? "bg-white text-blue-600 shadow-sm dark:bg-zinc-800 dark:text-blue-300"
+                    : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
                 }`}
               >
                 Active
               </button>
               <button
-                onClick={() => setFilter('completed')}
+                onClick={() => setFilter("completed")}
                 className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                  filter === 'completed'
-                    ? 'bg-white text-blue-600 shadow-sm dark:bg-zinc-800 dark:text-blue-300'
-                    : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100'
+                  filter === "completed"
+                    ? "bg-white text-blue-600 shadow-sm dark:bg-zinc-800 dark:text-blue-300"
+                    : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
                 }`}
               >
                 Completed
@@ -257,9 +354,13 @@ export default function Home() {
 
           <section className="flex flex-col gap-4 rounded-2xl border border-zinc-100 bg-zinc-50/80 p-4 dark:border-zinc-800 dark:bg-zinc-950/70 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
-              <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Progress</p>
+              <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                Progress
+              </p>
               <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-                {isMounted ? `${completedTasks} of ${tasks.length} completed` : "Loading..."}
+                {tasksLoading
+                  ? "Loading tasks..."
+                  : `${completedTasks} of ${tasks.length} completed`}
               </p>
             </div>
             <div className="flex w-full items-center gap-3 sm:max-w-xs">
@@ -279,9 +380,9 @@ export default function Home() {
             <TaskList
               tasks={filteredTasks}
               onToggle={handleToggle}
-              onDelete={deleteTask}
+              onDelete={handleDelete}
               onUpdate={handleUpdate}
-              isLoaded={isLoaded}
+              isLoaded={!tasksLoading}
             />
           </div>
         </div>
