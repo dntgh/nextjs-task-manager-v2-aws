@@ -5,6 +5,12 @@ import { usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
 
+function isActiveRoute(pathname: string, href: string): boolean {
+  if (href === "/") return pathname === "/";
+  const normalized = href.endsWith("/") ? href : `${href}/`;
+  return pathname === normalized;
+}
+
 export function Navbar() {
   const { user, logout, isLoading } = useAuth();
   const pathname = usePathname();
@@ -32,7 +38,7 @@ export function Navbar() {
                   href={link.href}
                   prefetch={false}
                   className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors duration-200 ${
-                    pathname === link.href
+                    isActiveRoute(pathname, link.href)
                       ? "border-blue-500 text-gray-900 dark:text-white"
                       : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-300 dark:hover:text-white dark:hover:border-gray-600"
                   }`}
@@ -96,7 +102,7 @@ export function Navbar() {
                 href={link.href}
                 prefetch={false}
                 className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium ${
-                  pathname === link.href
+                  isActiveRoute(pathname, link.href)
                     ? "bg-blue-50 border-blue-500 text-blue-700 dark:bg-gray-800 dark:border-blue-400 dark:text-blue-400"
                     : "border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
                 }`}
