@@ -34,7 +34,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const session = await fetchAuthSession();
       
       setUser(currentUser);
-      setToken(session.tokens?.accessToken?.toString() || null);
+      setToken(session.tokens?.idToken?.toString() || null);
     } catch (error) {
       setUser(null);
       setToken(null);

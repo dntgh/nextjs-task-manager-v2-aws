@@ -2,7 +2,9 @@
 
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 import TaskForm from "@/components/TaskForm";
 import TaskList from "@/components/TaskList";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -21,6 +23,8 @@ type FilterType = 'all' | 'active' | 'completed';
 
 export default function Home() {
   const [isMounted, setIsMounted] = useState(false);
+  const router = useRouter();
+  const { user, isLoading: authLoading } = useAuth();
   const [tasks, setTasks, isLoaded] = useLocalStorage<Task[]>('tasks', []);
   const [filter, setFilter] = useState<FilterType>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -111,6 +115,23 @@ export default function Home() {
 
     return () => cancelAnimationFrame(frameId);
   }, []);
+
+  useEffect(() => {
+    if (isMounted && !authLoading && !user) {
+      router.push('/login');
+    }
+  }, [isMounted, authLoading, user, router]);
+
+  if (!isMounted || authLoading || !user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50/50 to-zinc-100 transition-colors dark:from-zinc-950 dark:via-slate-950 dark:to-blue-950">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-600 border-t-transparent dark:border-blue-400 dark:border-t-transparent"></div>
+          <p className="font-medium tracking-tight text-zinc-600 dark:text-zinc-400">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50/50 to-zinc-100 px-4 py-10 font-sans text-zinc-950 transition-colors dark:from-zinc-950 dark:via-slate-950 dark:to-blue-950 dark:text-zinc-50">
