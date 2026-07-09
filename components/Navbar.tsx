@@ -12,7 +12,6 @@ export function Navbar() {
 
   const navLinks = [
     { name: "Home", href: "/" },
-    { name: "Dashboard", href: "/dashboard" },
     { name: "About", href: "/about" },
   ];
 
@@ -21,7 +20,7 @@ export function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
-            <Link href="/" className="flex-shrink-0 flex items-center">
+            <Link href="/" prefetch={false} className="flex-shrink-0 flex items-center">
               <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
                 TaskManager
               </span>
@@ -31,6 +30,7 @@ export function Navbar() {
                 <Link
                   key={link.name}
                   href={link.href}
+                  prefetch={false}
                   className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors duration-200 ${
                     pathname === link.href
                       ? "border-blue-500 text-gray-900 dark:text-white"
@@ -60,6 +60,7 @@ export function Navbar() {
             ) : (
               <Link
                 href="/login"
+                prefetch={false}
                 className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-sm transition-colors duration-200"
               >
                 Login
@@ -93,6 +94,7 @@ export function Navbar() {
               <Link
                 key={link.name}
                 href={link.href}
+                prefetch={false}
                 className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium ${
                   pathname === link.href
                     ? "bg-blue-50 border-blue-500 text-blue-700 dark:bg-gray-800 dark:border-blue-400 dark:text-blue-400"
@@ -126,6 +128,7 @@ export function Navbar() {
               ) : (
                 <Link
                   href="/login"
+                  prefetch={false}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="w-full text-center px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-sm"
                 >
