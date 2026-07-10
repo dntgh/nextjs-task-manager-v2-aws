@@ -7,36 +7,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { PasswordStrengthIndicator } from "@/components/PasswordStrengthIndicator";
 import { toast } from "sonner";
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [passwordError, setPasswordError] = useState("");
+  const [isPasswordValid, setIsPasswordValid] = useState(false);
   const [confirmError, setConfirmError] = useState("");
   const { handleSignUp, isLoading } = useAuth();
   const router = useRouter();
 
-  const validatePassword = (pwd: string): string => {
-    if (pwd.length < 8) {
-      return "Password must be at least 8 characters";
-    }
-    if (!/[A-Z]/.test(pwd)) {
-      return "Password must contain at least one uppercase letter";
-    }
-    if (!/[a-z]/.test(pwd)) {
-      return "Password must contain at least one lowercase letter";
-    }
-    if (!/[0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pwd)) {
-      return "Password must contain at least one number or special character";
-    }
-    return "";
-  };
-
   const handlePasswordChange = (value: string) => {
     setPassword(value);
-    setPasswordError(validatePassword(value));
     if (confirmPassword) {
       setConfirmError(value !== confirmPassword ? "Passwords do not match" : "");
     }
@@ -49,16 +33,14 @@ export default function SignupPage() {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email || !password || !confirmPassword) {
       toast.error("Please fill in all fields");
       return;
     }
 
-    const pwdError = validatePassword(password);
-    if (pwdError) {
-      setPasswordError(pwdError);
-      toast.error(pwdError);
+    if (!isPasswordValid) {
+      toast.error("Please ensure your password meets all requirements");
       return;
     }
 
@@ -69,8 +51,8 @@ export default function SignupPage() {
     }
 
     try {
-      const response = await handleSignUp({ 
-        username: email, 
+      const response = await handleSignUp({
+        username: email,
         password,
         options: {
           userAttributes: {
@@ -88,7 +70,7 @@ export default function SignupPage() {
       }
     } catch (error: any) {
       let errorMessage = "Registration failed. Please try again.";
-      
+
       if (error.message?.includes('UsernameExistsException') || error.message?.includes('User already exists')) {
         errorMessage = "An account with this email already exists";
       } else if (error.message?.includes('InvalidPasswordException') || error.message?.includes('password')) {
@@ -96,7 +78,7 @@ export default function SignupPage() {
       } else if (error.message) {
         errorMessage = error.message;
       }
-      
+
       toast.error(errorMessage);
     }
   };
@@ -116,10 +98,10 @@ export default function SignupPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input 
-                id="email" 
-                type="email" 
-                placeholder="m@example.com" 
+              <Input
+                id="email"
+                type="email"
+                placeholder="m@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isLoading}
@@ -128,24 +110,24 @@ export default function SignupPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input 
-                id="password" 
+              <Input
+                id="password"
                 type="password"
                 placeholder="Enter a secure password"
                 value={password}
                 onChange={(e) => handlePasswordChange(e.target.value)}
                 disabled={isLoading}
                 required
-                className={passwordError ? "border-red-500" : ""}
               />
-              {passwordError && (
-                <p className="text-sm text-red-500">{passwordError}</p>
-              )}
+              <PasswordStrengthIndicator
+                password={password}
+                onValidityChange={(isValid) => setIsPasswordValid(isValid)}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input 
-                id="confirmPassword" 
+              <Input
+                id="confirmPassword"
                 type="password"
                 placeholder="Confirm your password"
                 value={confirmPassword}
@@ -160,13 +142,13 @@ export default function SignupPage() {
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
-            <Button type="submit" className="w-full" disabled={isLoading || !!passwordError || !!confirmError}>
+            <Button type="submit" className="w-full" disabled={isLoading || !isPasswordValid || !!confirmError}>
               {isLoading ? "Creating account..." : "Sign Up"}
             </Button>
             <p className="text-sm text-center text-gray-600 dark:text-gray-400">
               Already have an account?{" "}
-              <Link 
-                href="/login" 
+              <Link
+                href="/login"
                 className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
               >
                 Login
