@@ -16,7 +16,7 @@ This repository showcases highly polished, recruiter-ready production patterns, 
 
 *   **✨ Task CRUD**: Create, read, edit, and delete tasks seamlessly. Supports high, medium, and low priority levels.
 *   **📅 Smart Date Management**: Timezone-safe due dates with relative indicators (*Today*, *Tomorrow*, *Yesterday*, *In X days*, *Overdue*) and automatic local midnight parsing to prevent timezone offset bugs.
-*   **🔄 Robust State & Undo Action**: Lightweight `localStorage` persistence integrated into a custom hook. Features a real-time **Toast Notification** system powered by `Sonner` with a fully-functional **Undo** delete action using functional state updates to prevent stale closures.
+*   **🔄 Robust State Management**: AWS API-only mode with real-time **Toast Notification** system powered by `Sonner`. Features functional state updates to prevent stale closures and ensure data consistency across the application.
 *   **⚡ Zero-Flash Hydration**: Premium UX utilizing animated skeleton layouts during client-side data fetching to eliminate SSR hydration content flashes and layout shifts.
 *   **🔍 Advanced Search & Filtering**: Real-time search with a custom debouncing hook (`useDebounce`) to optimize render cycles, alongside status categories (*All*, *Active*, *Completed*) fully memoized via `useMemo`.
 *   **🎨 Visual Polish & Accessibility (a11y)**:
@@ -34,6 +34,7 @@ This project was built using the following core technologies, pinned to the exac
 *   **Language**: TypeScript `^5` (Strict Mode compliant)
 *   **Library**: React `19.2.4` / React DOM `19.2.4`
 *   **Styling**: Tailwind CSS `^4` (with native `@tailwindcss/postcss` setup)
+*   **Authentication**: AWS Amplify `^6.18.0` (Cognito integration)
 *   **Notifications**: Sonner `^2.0.7`
 *   **Icons**: Customized, lightweight inline SVGs optimized for high-performance and design flexibility.
 
@@ -72,26 +73,15 @@ Get the project up and running locally by following these steps:
 
 To demonstrate software engineering depth and production-ready code patterns, the application implements several advanced technical concepts:
 
-### 1. Robust State Persistence & Zero-Flash Hydration
-To avoid the standard Next.js hydration error (where server HTML mismatches client HTML because of client-side `localStorage`), the custom `useLocalStorage` hook incorporates a deferred loading architecture.
-Combined with a `requestAnimationFrame` mounted check, the UI displays highly polished **Skeleton Shimmers** during the initial mount, resulting in zero layout shifts or content flashes.
+### 1. AWS API-Only Architecture
+The application enforces AWS API-only mode for all data operations. All CRUD operations are performed through authenticated HTTP requests to AWS API Gateway, which routes to Lambda functions and DynamoDB. This ensures data consistency across devices and eliminates client-side storage limitations.
 
 ```typescript
-// LocalStorage loaded safely on client-side
-useEffect(() => {
-  const timeoutId = window.setTimeout(() => {
-    try {
-      const item = window.localStorage.getItem(key);
-      setStoredValue(item ? JSON.parse(item) : initialValueRef.current);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      hasLoadedRef.current = true;
-      setIsLoaded(true);
-    }
-  }, 0);
-  return () => window.clearTimeout(timeoutId);
-}, [key]);
+// All data operations require valid JWT token
+const authHeaders = (token: string): HeadersInit => ({
+  'Content-Type': 'application/json',
+  Authorization: `Bearer ${token}`,
+});
 ```
 
 ### 2. Memoized Filtering & Search Debouncing
@@ -140,10 +130,34 @@ useEffect(() => {
 }, [isDeleteModalOpen]);
 ```
 
-### 4. Stale-Closure Defeated Undo Pattern
-When a task is deleted, the application provides a Toast notification with an **Undo** CTA. To guarantee that clicking "Undo" restores the item at its correct pre-deletion index without relying on closure values that might have gone stale, the callback triggers a functional state updater.
+### 4. Serverless Authentication Flow
+Authentication is handled through AWS Cognito User Pools using AWS Amplify SDK. The application implements:
+*   **JWT Token Management**: Automatic token refresh and session management via Amplify Hub event listeners
+*   **Protected Routes**: Client-side route guards to prevent unauthorized access
+*   **Email Verification**: Multi-step signup flow with confirmation codes
+*   **Token-Based Authorization**: All API requests include Cognito JWT tokens in Authorization headers
 
 ---
 
-## ☁️ AWS Deployment Ready
-The application is fully containerized and statically optimized, making it ready to deploy on AWS using services like **AWS Amplify**, **Amazon S3 + CloudFront** (for static export), or **AWS ECS/Fargate** (for server-side rendering).
+## ☁️ AWS Infrastructure
+The application is deployed on AWS with the following serverless architecture:
+
+**Frontend:**
+*   **Hosting**: Amazon S3 (`dnt-nextjs-task-manager-frontend`) for static web hosting
+*   **CDN**: CloudFront (`dnt-nextjs-task-manager-dev-website`) for global content delivery
+*   **Domain**: Route 53 (`dotung.site`) for custom domain management
+
+**Backend:**
+*   **API Gateway**: REST API (`dnt-nextjs-task-manager-api`) for request routing and JWT validation
+*   **Compute**: AWS Lambda (`dnt-nextjs-task-manager-crud-lambda`) with Node.js 22.x runtime
+*   **Database**: Amazon DynamoDB (`dnt-nextjs-task-manager-tasks-table`) for NoSQL data storage
+*   **Authentication**: Amazon Cognito User Pool (`dnt-nextjs-task-manager-user-pool`) for user management
+
+**Security & Monitoring:**
+*   **IAM**: Lambda execution role with least-privilege permissions
+*   **CloudWatch**: Log group for Lambda function monitoring and debugging
+
+**Environment Variables Required:**
+*   `NEXT_PUBLIC_API_URL`: API Gateway endpoint URL
+*   `NEXT_PUBLIC_AWS_COGNITO_USER_POOL_ID`: Cognito User Pool ID
+*   `NEXT_PUBLIC_AWS_COGNITO_APP_CLIENT_ID`: Cognito App Client ID
