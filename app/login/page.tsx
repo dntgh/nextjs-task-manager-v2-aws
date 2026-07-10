@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,12 +20,12 @@ export default function LoginPage() {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!isNewPasswordRequired && (!email || !password)) {
       toast.error("Please enter both email and password");
       return;
     }
-    
+
     if (isNewPasswordRequired && !newPassword) {
       toast.error("Please enter a new password");
       return;
@@ -62,8 +63,8 @@ export default function LoginPage() {
             {isNewPasswordRequired ? "Update Password" : "Sign in"}
           </CardTitle>
           <CardDescription>
-            {isNewPasswordRequired 
-              ? "Your account requires a new password upon first login." 
+            {isNewPasswordRequired
+              ? "Your account requires a new password upon first login."
               : "Enter your email and password to access your account"}
           </CardDescription>
         </CardHeader>
@@ -73,10 +74,10 @@ export default function LoginPage() {
               <>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input 
-                    id="email" 
-                    type="email" 
-                    placeholder="m@example.com" 
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="m@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     disabled={isLoading}
@@ -85,8 +86,8 @@ export default function LoginPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="password">Password</Label>
-                  <Input 
-                    id="password" 
+                  <Input
+                    id="password"
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -98,8 +99,8 @@ export default function LoginPage() {
             ) : (
               <div className="space-y-2">
                 <Label htmlFor="newPassword">New Password</Label>
-                <Input 
-                  id="newPassword" 
+                <Input
+                  id="newPassword"
                   type="password"
                   placeholder="Enter a new secure password"
                   value={newPassword}
@@ -110,12 +111,23 @@ export default function LoginPage() {
               </div>
             )}
           </CardContent>
-          <CardFooter>
+          <CardFooter className="flex flex-col space-y-4">
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading 
-                ? (isNewPasswordRequired ? "Updating..." : "Signing in...") 
+              {isLoading
+                ? (isNewPasswordRequired ? "Updating..." : "Signing in...")
                 : (isNewPasswordRequired ? "Update Password" : "Sign In")}
             </Button>
+            {!isNewPasswordRequired && (
+              <p className="text-sm text-center text-gray-600 dark:text-gray-400">
+                Don't have an account?{" "}
+                <Link
+                  href="/signup"
+                  className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
+                >
+                  Sign up
+                </Link>
+              </p>
+            )}
           </CardFooter>
         </form>
       </Card>

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getCurrentUser, fetchAuthSession, signIn, signOut, confirmSignIn, AuthUser, SignInInput, ConfirmSignInInput } from 'aws-amplify/auth';
+import { getCurrentUser, fetchAuthSession, signIn, signOut, confirmSignIn, signUp, confirmSignUp, resendSignUpCode, AuthUser, SignInInput, ConfirmSignInInput, SignUpInput, ConfirmSignUpInput } from 'aws-amplify/auth';
 import { Hub } from 'aws-amplify/utils';
 import '@/lib/aws-config';
 
@@ -12,6 +12,9 @@ interface AuthContextType {
   logout: () => Promise<void>;
   handleSignIn: (input: SignInInput) => Promise<any>;
   handleConfirmSignIn: (input: ConfirmSignInInput) => Promise<any>;
+  handleSignUp: (input: SignUpInput) => Promise<any>;
+  handleConfirmSignUp: (input: ConfirmSignUpInput) => Promise<any>;
+  handleResendSignUpCode: (username: string) => Promise<any>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -21,6 +24,9 @@ const AuthContext = createContext<AuthContextType>({
   logout: async () => {},
   handleSignIn: async () => {},
   handleConfirmSignIn: async () => {},
+  handleSignUp: async () => {},
+  handleConfirmSignUp: async () => {},
+  handleResendSignUpCode: async () => {},
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -32,7 +38,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       const currentUser = await getCurrentUser();
       const session = await fetchAuthSession();
-      
+
       setUser(currentUser);
       setToken(session.tokens?.idToken?.toString() || null);
     } catch (error) {
@@ -80,6 +86,36 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const handleSignUp = async (input: SignUpInput) => {
+    setIsLoading(true);
+    try {
+      const response = await signUp(input);
+      return response;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleConfirmSignUp = async (input: ConfirmSignUpInput) => {
+    setIsLoading(true);
+    try {
+      const response = await confirmSignUp(input);
+      return response;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendSignUpCode = async (username: string) => {
+    setIsLoading(true);
+    try {
+      const response = await resendSignUpCode({ username });
+      return response;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     checkUser();
 
@@ -106,7 +142,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, logout: handleLogout, handleSignIn, handleConfirmSignIn }}>
+    <AuthContext.Provider value={{ user, token, isLoading, logout: handleLogout, handleSignIn, handleConfirmSignIn, handleSignUp, handleConfirmSignUp, handleResendSignUpCode }}>
       {children}
     </AuthContext.Provider>
   );

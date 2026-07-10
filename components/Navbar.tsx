@@ -64,13 +64,22 @@ export function Navbar() {
                 </button>
               </div>
             ) : (
-              <Link
-                href="/login"
-                prefetch={false}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-sm transition-colors duration-200"
-              >
-                Login
-              </Link>
+              <div className="flex items-center space-x-3">
+                <Link
+                  href="/signup"
+                  prefetch={false}
+                  className="px-4 py-2 text-sm font-medium text-blue-600 bg-white hover:bg-gray-50 border border-blue-600 rounded-md shadow-sm transition-colors duration-200"
+                >
+                  Sign up
+                </Link>
+                <Link
+                  href="/login"
+                  prefetch={false}
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-sm transition-colors duration-200"
+                >
+                  Login
+                </Link>
+              </div>
             )}
           </div>
           <div className="-mr-2 flex items-center sm:hidden">
@@ -132,14 +141,24 @@ export function Navbar() {
                   </button>
                 </div>
               ) : (
-                <Link
-                  href="/login"
-                  prefetch={false}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="w-full text-center px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-sm"
-                >
-                  Login
-                </Link>
+                <div className="flex flex-col space-y-2">
+                  <Link
+                    href="/signup"
+                    prefetch={false}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="w-full text-center px-4 py-2 text-sm font-medium text-blue-600 bg-white hover:bg-gray-50 border border-blue-600 rounded-md shadow-sm"
+                  >
+                    Sign up
+                  </Link>
+                  <Link
+                    href="/login"
+                    prefetch={false}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="w-full text-center px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-sm"
+                  >
+                    Login
+                  </Link>
+                </div>
               )}
             </div>
           </div>
