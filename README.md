@@ -6,23 +6,23 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.0-38B2AC?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 [![AWS Ready](https://img.shields.io/badge/AWS-Ready-FF9900?style=for-the-badge&logo=amazon-aws&logoColor=white)](#-architectural-highlights)
 
-A modern, pixel-perfect Task Management application built with **Next.js App Router**, engineered with professional-grade state management, accessibility (a11y), and performance optimizations.
+A modern Task Management application built with **Next.js App Router**, demonstrating production-grade state management, accessibility (a11y), and performance optimizations.
 
-This repository showcases highly polished, recruiter-ready production patterns, utilizing custom hooks, premium UX/UI transitions, zero-hydration flashes, and bulletproof keyboard accessibility.
+This repository implements practical production patterns, utilizing custom hooks, smooth UX/UI transitions, zero-hydration flashes, and comprehensive keyboard accessibility.
+
+> **Note**: This is the v2 (AWS Serverless) version.
+> Check out the original [v1 (Netlify SPA)](https://github.com/dntgh/nextjs-task-manager) for comparison.
 
 ---
 
 ## 🚀 Core Features
 
-*   **✨ Task CRUD**: Create, read, edit, and delete tasks seamlessly. Supports high, medium, and low priority levels.
-*   **📅 Smart Date Management**: Timezone-safe due dates with relative indicators (*Today*, *Tomorrow*, *Yesterday*, *In X days*, *Overdue*) and automatic local midnight parsing to prevent timezone offset bugs.
-*   **🔄 Robust State Management**: AWS API-only mode with real-time **Toast Notification** system powered by `Sonner`. Features functional state updates to prevent stale closures and ensure data consistency across the application.
-*   **⚡ Zero-Flash Hydration**: Premium UX utilizing animated skeleton layouts during client-side data fetching to eliminate SSR hydration content flashes and layout shifts.
-*   **🔍 Advanced Search & Filtering**: Real-time search with a custom debouncing hook (`useDebounce`) to optimize render cycles, alongside status categories (*All*, *Active*, *Completed*) fully memoized via `useMemo`.
-*   **🎨 Visual Polish & Accessibility (a11y)**:
-    *   Accessible custom checkbox controls implementing `role="checkbox"` and dynamic `aria-checked` bindings.
-    *   Elite **Modal Focus Management** for deleting tasks (using React portals, custom `useRef` auto-focus on cancel button, and a global event listener for the `Escape` key to prevent keyboard traps).
-    *   Responsive design matching Light/Dark themes using modern CSS/PostCSS variables.
+*   **✨ Task CRUD**: Create, read, edit, and delete tasks with assigned priority levels (High, Medium, Low).
+*   **📅 Smart Date Management**: Timezone-safe due dates with relative indicators (*Today*, *Tomorrow*, *Yesterday*, *In X days*, *Overdue*) and automatic local midnight parsing.
+*   **🔄 Robust State Management**: AWS API-integrated state management paired with a real-time toast notification system.
+*   **⚡ Zero-Flash Hydration**: Animated skeleton layouts during client-side data fetching to eliminate SSR hydration content flashes and layout shifts.
+*   **🔍 Advanced Search & Filtering**: Real-time search and status categorization (*All*, *Active*, *Completed*).
+*   **🎨 Accessibility & Theming**: WCAG-compliant interactions, including focus-trapping modals, accessible form controls, and responsive Light/Dark modes.
 
 ---
 
@@ -36,7 +36,7 @@ This project was built using the following core technologies, pinned to the exac
 *   **Styling**: Tailwind CSS `^4` (with native `@tailwindcss/postcss` setup)
 *   **Authentication**: AWS Amplify `^6.18.0` (Cognito integration)
 *   **Notifications**: Sonner `^2.0.7`
-*   **Icons**: Customized, lightweight inline SVGs optimized for high-performance and design flexibility.
+*   **Icons**: Customized, lightweight inline SVGs.
 
 ---
 
@@ -46,22 +46,31 @@ Get the project up and running locally by following these steps:
 
 1.  **Clone the Repository**:
     ```bash
-    git clone https://github.com/dtdev-hub/dtd-ppvc-01-nextjs-task-manager.git
+    git clone [https://github.com/dntgh/nextjs-task-manager-v2-aws.git](https://github.com/dntgh/nextjs-task-manager-v2-aws.git)
     cd task-manager
     ```
+    *(Lưu ý: Bạn hãy kiểm tra lại URL github này xem đã đúng username của bạn chưa nhé)*
 
 2.  **Install Dependencies**:
     ```bash
     npm install
     ```
 
-3.  **Run Development Server**:
+3.  **Environment Setup**:
+    Create a `.env.local` file in the root directory and add the following:
+    ```env
+    NEXT_PUBLIC_API_URL=your_api_gateway_endpoint
+    NEXT_PUBLIC_AWS_COGNITO_USER_POOL_ID=your_user_pool_id
+    NEXT_PUBLIC_AWS_COGNITO_APP_CLIENT_ID=your_client_id
+    ```
+
+4.  **Run Development Server**:
     ```bash
     npm run dev
     ```
     Open [http://localhost:3000](http://localhost:3000) with your browser to see the application.
 
-4.  **Production Build**:
+5.  **Production Build**:
     ```bash
     npm run build
     npm run start
@@ -71,71 +80,19 @@ Get the project up and running locally by following these steps:
 
 ## 📐 Architectural Highlights
 
-To demonstrate software engineering depth and production-ready code patterns, the application implements several advanced technical concepts:
+This application is engineered as a production-ready, serverless-first system. Key highlights include:
 
-### 1. AWS API-Only Architecture
-The application enforces AWS API-only mode for all data operations. All CRUD operations are performed through authenticated HTTP requests to AWS API Gateway, which routes to Lambda functions and DynamoDB. This ensures data consistency across devices and eliminates client-side storage limitations.
+*   **AWS API-Only Architecture**: Decoupled backend operations utilizing API Gateway, Lambda, and DynamoDB for consistent data management.
+*   **Memoized Optimization**: Intelligent UI rendering using `useMemo` and custom debouncing to ensure high performance.
+*   **Accessibility (a11y)**: WCAG-compliant implementation, featuring focus-trapping modals and keyboard navigation.
+*   **Serverless Auth**: Robust identity management via Amazon Cognito.
 
-```typescript
-// All data operations require valid JWT token
-const authHeaders = (token: string): HeadersInit => ({
-  'Content-Type': 'application/json',
-  Authorization: `Bearer ${token}`,
-});
-```
+> **Note:** For a deep dive into the system design, detailed data lifecycles, and machine-readable metadata, please refer to our [System Architecture Documentation](docs/architecture/01_architecture_and_data_flow.md).
 
-### 2. Memoized Filtering & Search Debouncing
-To prevent unnecessary and expensive re-computations when typing in the search bar, the UI combines a custom `useDebounce` hook with React’s `useMemo`. Re-rendering of the entire list is strictly limited to when the user stops typing (debounced by `300ms`) or when a task's state changes.
+---
 
-```typescript
-const debouncedSearchQuery = useDebounce(searchQuery, 300);
-
-const filteredTasks = useMemo(() => {
-  return tasks.filter((task) => {
-    const matchesFilter = () => {
-      if (filter === 'active') return !task.completed;
-      if (filter === 'completed') return task.completed;
-      return true;
-    };
-    const matchesSearch = () => {
-      if (!debouncedSearchQuery.trim()) return true;
-      return task.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase());
-    };
-    return matchesFilter() && matchesSearch();
-  });
-}, [tasks, filter, debouncedSearchQuery]);
-```
-
-### 3. Bulletproof Keyboard & Portal Focus Management
-When a user attempts to delete a task, a Modal is rendered using `createPortal` targeting `document.body` to completely isolate it from layout parent constraints.
-To achieve exceptional **WCAG-compliant keyboard navigation**, the modal implements:
-*   **Focus Trapping**: Automatically shifts focus to the safe `Cancel` button via `useRef` upon mounting.
-*   **Global Event Listeners**: Closes automatically on `Escape` key down.
-*   **ARIA attributes**: Properly sets `role="dialog"`, `aria-modal="true"`, and `aria-labelledby` linkages.
-
-```typescript
-useEffect(() => {
-  if (isDeleteModalOpen) {
-    cancelButtonRef.current?.focus();
-  }
-}, [isDeleteModalOpen]);
-
-useEffect(() => {
-  if (!isDeleteModalOpen) return;
-  const handleGlobalKeyDown = (e: KeyboardEvent) => {
-    if (e.key === "Escape") setIsDeleteModalOpen(false);
-  };
-  window.addEventListener("keydown", handleGlobalKeyDown);
-  return () => window.removeEventListener("keydown", handleGlobalKeyDown);
-}, [isDeleteModalOpen]);
-```
-
-### 4. Serverless Authentication Flow
-Authentication is handled through AWS Cognito User Pools using AWS Amplify SDK. The application implements:
-*   **JWT Token Management**: Automatic token refresh and session management via Amplify Hub event listeners
-*   **Protected Routes**: Client-side route guards to prevent unauthorized access
-*   **Email Verification**: Multi-step signup flow with confirmation codes
-*   **Token-Based Authorization**: All API requests include Cognito JWT tokens in Authorization headers
+## 📑 Documentation
+*   **Post-deployment Assessment**: [View Report](docs/PostDeployment_Assessment_v1.0.pdf)
 
 ---
 
@@ -157,7 +114,5 @@ The application is deployed on AWS with the following serverless architecture:
 *   **IAM**: Lambda execution role with least-privilege permissions
 *   **CloudWatch**: Log group for Lambda function monitoring and debugging
 
-**Environment Variables Required:**
-*   `NEXT_PUBLIC_API_URL`: API Gateway endpoint URL
-*   `NEXT_PUBLIC_AWS_COGNITO_USER_POOL_ID`: Cognito User Pool ID
-*   `NEXT_PUBLIC_AWS_COGNITO_APP_CLIENT_ID`: Cognito App Client ID
+### 🏗️ System Architecture
+![System Architecture](docs/architecture/task-manager-system-architecture-diagram.png)
