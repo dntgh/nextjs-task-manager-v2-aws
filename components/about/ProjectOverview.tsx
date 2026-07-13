@@ -32,7 +32,7 @@ export default function ProjectOverview() {
         </div>
 
         <p className="text-base leading-relaxed text-zinc-600 dark:text-zinc-400">
-          The <strong>Task Manager</strong> is a local-first productivity web application focused on fast, offline-capable task tracking. Built with Next.js (App Router) and React, it provides a clean, minimal interface to manage daily priorities directly in the browser without external network dependencies.
+          The <strong>Task Manager</strong> is a cloud-native productivity application engineered for scalability and reliability using AWS Serverless architecture. It offers a secure, high-performance interface for managing daily priorities, fully integrated with cloud services to ensure persistent, multi-device data access and consistent synchronization.
         </p>
 
         <div className="mt-2 grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -43,15 +43,15 @@ export default function ProjectOverview() {
             </p>
           </div>
           <div className="rounded-2xl border border-zinc-100 bg-zinc-50/50 p-4 dark:border-zinc-800/50 dark:bg-zinc-950/40">
-            <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm">Instant Responsiveness</h3>
+            <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm">Optimized Performance</h3>
             <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-              Zero network roundtrips during daily operations translate to a lightning-fast, zero-latency user experience.
+              Optimized for speed, leveraging modern React patterns and efficient API communication to provide a seamless, high-performance interface.
             </p>
           </div>
           <div className="rounded-2xl border border-zinc-100 bg-zinc-50/50 p-4 dark:border-zinc-800/50 dark:bg-zinc-950/40">
-            <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm">Offline Capability</h3>
+            <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm">Secure Cloud Persistence</h3>
             <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-              Operates continuously without an active internet connection, fully preserving state in your web browser.
+              Your data is safely stored and synchronized in the cloud, accessible from any device through secure, authenticated AWS infrastructure.
             </p>
           </div>
         </div>

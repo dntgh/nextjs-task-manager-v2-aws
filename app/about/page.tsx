@@ -3,7 +3,7 @@ import AboutHeader from "@/components/about/AboutHeader";
 import ProjectOverview from "@/components/about/ProjectOverview";
 import TechStackCost from "@/components/about/TechStackCost";
 import CurrentArchitecture from "@/components/about/CurrentArchitecture";
-import AwsRoadmap from "@/components/about/AwsRoadmap";
+import InfrastructureOverview from "@/components/about/InfrastructureOverview";
 import SecurityMeasures from "@/components/about/SecurityMeasures";
 
 export const metadata = {
@@ -33,7 +33,7 @@ export default function AboutPage() {
           <ProjectOverview />
           <TechStackCost />
           <CurrentArchitecture />
-          <AwsRoadmap />
+          <InfrastructureOverview />
           <SecurityMeasures />
         </div>
       </main>
