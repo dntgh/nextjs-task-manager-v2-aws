@@ -181,6 +181,9 @@ export default function LoginPage() {
                 >
                   {isDemoModeLoading ? "Setting up demo..." : "Demo Mode"}
                 </Button>
+                <p className="text-xs text-muted-foreground italic text-center mt-2">
+                  * Note: Demo data automatically resets to default tasks upon every login.
+                </p>
                 <p className="text-sm text-center text-gray-600 dark:text-gray-400">
                   Don&apos;t have an account?{" "}
                   <Link

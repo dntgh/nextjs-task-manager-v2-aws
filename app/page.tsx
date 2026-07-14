@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import TaskForm from "@/components/TaskForm";
 import TaskList from "@/components/TaskList";
 import ThemeToggle from "@/components/ThemeToggle";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import useDebounce from "@/hooks/useDebounce";
 import {
   fetchTasks,
@@ -206,6 +207,12 @@ export default function Home() {
     }
   };
 
+  const isDemoUser =
+    user?.signInDetails?.loginId === "demoaccount@dotung.site" ||
+    user?.username === "demoaccount@dotung.site" ||
+    (process.env.NEXT_PUBLIC_GUEST_EMAIL &&
+      user?.signInDetails?.loginId === process.env.NEXT_PUBLIC_GUEST_EMAIL);
+
   // ─── Loading / auth gate render ───────────────────────────────────────────
   if (!isMounted || authLoading || !user) {
     return (
@@ -223,6 +230,13 @@ export default function Home() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50/50 to-zinc-100 px-4 py-10 font-sans text-zinc-950 transition-colors dark:from-zinc-950 dark:via-slate-950 dark:to-blue-950 dark:text-zinc-50">
       <main className="w-full max-w-3xl rounded-3xl border border-white/80 bg-white px-5 py-8 shadow-xl shadow-zinc-200/70 transition-colors dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-zinc-950/60 sm:px-8 md:px-12">
+        {isDemoUser && (
+          <Alert className="mb-6 flex items-center gap-3 border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/50 dark:text-amber-200">
+            <AlertDescription className="text-sm">
+              ⚠️ Demo Mode: Feel free to add, edit, or delete tasks. However, all changes are temporary and will reset to default tasks upon logging out or re-logging.
+            </AlertDescription>
+          </Alert>
+        )}
         <div className="flex w-full flex-col gap-8">
           <div className="relative space-y-3 text-center">
             <div className="absolute right-0 top-0 flex items-center gap-2">
