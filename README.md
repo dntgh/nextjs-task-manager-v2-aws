@@ -46,8 +46,8 @@ Get the project up and running locally by following these steps:
 
 1.  **Clone the Repository**:
     ```bash
-    git clone [https://github.com/dntgh/nextjs-task-manager-v2-aws.git](https://github.com/dntgh/nextjs-task-manager-v2-aws.git)
-    cd task-manager
+    git clone https://github.com/dntgh/nextjs-task-manager-v2-aws.git
+    cd nextjs-task-manager-v2-aws/
     ```
     *(Lưu ý: Bạn hãy kiểm tra lại URL github này xem đã đúng username của bạn chưa nhé)*
 
