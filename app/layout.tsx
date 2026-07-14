@@ -70,6 +70,7 @@ export default function RootLayout({
           </main>
           <Toaster
             position="top-right"
+            duration={2000}
             richColors
             closeButton
             theme="system"
