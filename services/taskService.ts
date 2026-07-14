@@ -86,3 +86,15 @@ export const deleteTask = async (token: string, id: string): Promise<void> => {
   });
   if (!res.ok) throw new Error(`deleteTask failed: ${res.status}`);
 };
+
+/**
+ * Resets the guest account data by clearing existing tasks and seeding fresh mock data.
+ * API: POST /tasks/demo-reset
+ */
+export const resetGuestData = async (token: string): Promise<void> => {
+  const res = await fetch(`${API_URL}/tasks/demo-reset`, {
+    method: 'POST',
+    headers: authHeaders(token),
+  });
+  if (!res.ok) throw new Error(`resetGuestData failed: ${res.status}`);
+};

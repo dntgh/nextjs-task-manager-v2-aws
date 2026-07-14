@@ -4,17 +4,20 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
+import { fetchAuthSession } from 'aws-amplify/auth';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import { resetGuestData } from "@/services/taskService";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [isNewPasswordRequired, setIsNewPasswordRequired] = useState(false);
+  const [isDemoModeLoading, setIsDemoModeLoading] = useState(false);
   const { handleSignIn, handleConfirmSignIn, isLoading } = useAuth();
   const router = useRouter();
 
@@ -50,8 +53,58 @@ export default function LoginPage() {
           router.refresh();
         }
       }
-    } catch (error: any) {
-      toast.error(error.message || "Authentication failed. Please check your credentials.");
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Authentication failed. Please check your credentials.";
+      toast.error(errorMessage);
+    }
+  };
+
+  const handleDemoMode = async () => {
+    // NOTE: Intentional Architectural Trade-off (Tight Coupling)
+    // Orchestrating backend data-seeding logic directly inside the Login page couples Authentication and Data flow tightly.
+    // This approach was deliberately chosen to optimize development velocity and ensure a seamless single-loading UX for portfolio visitors.
+    // Future Refactoring: Consider moving this data-reset trigger into a dedicated dashboard layout wrapper or middleware
+    // to decouple authentication from business logic.
+    setIsDemoModeLoading(true);
+    try {
+      const guestEmail = process.env.NEXT_PUBLIC_GUEST_EMAIL;
+      const guestPassword = process.env.NEXT_PUBLIC_GUEST_PASSWORD;
+
+      if (!guestEmail || !guestPassword) {
+        throw new Error("Guest credentials not configured. Please contact administrator.");
+      }
+
+      const response = await handleSignIn({ username: guestEmail, password: guestPassword });
+
+      if (response.nextStep?.signInStep === 'DONE') {
+        toast.success("Demo mode activated");
+
+        try {
+          const session = await fetchAuthSession();
+          const freshToken = session.tokens?.idToken?.toString();
+
+          if (freshToken) {
+            await resetGuestData(freshToken);
+            toast.success("Demo data reset successfully");
+          } else {
+            throw new Error("Failed to obtain authentication token");
+          }
+        } catch (apiError) {
+          console.error("Failed to reset demo data:", apiError);
+          toast.error("Failed to reset demo data, but you can still explore the app");
+        }
+
+        router.push("/");
+        router.refresh();
+      } else if (response.nextStep?.signInStep === 'CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED') {
+        setIsNewPasswordRequired(true);
+        toast.info("Demo account requires password setup. Please contact administrator.");
+      }
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Demo mode failed. Please try regular sign in.";
+      toast.error(errorMessage);
+    } finally {
+      setIsDemoModeLoading(false);
     }
   };
 
@@ -118,15 +171,26 @@ export default function LoginPage() {
                 : (isNewPasswordRequired ? "Update Password" : "Sign In")}
             </Button>
             {!isNewPasswordRequired && (
-              <p className="text-sm text-center text-gray-600 dark:text-gray-400">
-                Don't have an account?{" "}
-                <Link
-                  href="/signup"
-                  className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  disabled={isDemoModeLoading}
+                  onClick={handleDemoMode}
                 >
-                  Sign up
-                </Link>
-              </p>
+                  {isDemoModeLoading ? "Setting up demo..." : "Demo Mode"}
+                </Button>
+                <p className="text-sm text-center text-gray-600 dark:text-gray-400">
+                  Don&apos;t have an account?{" "}
+                  <Link
+                    href="/signup"
+                    className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
+                  >
+                    Sign up
+                  </Link>
+                </p>
+              </>
             )}
           </CardFooter>
         </form>
